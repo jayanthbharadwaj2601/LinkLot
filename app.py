@@ -17,7 +17,10 @@ cur = conn.cursor()
 @app.route("/getbookmarksviasearch",methods=['GET','POST'])
 def hello_world():
     a=request.get_json()
-    query = "select * from bookmarks"
+    if a['Lot']==[]:
+        query = "select * from bookmarks"
+    else:
+        query = "select distinct a.* from bookmarks as a join urllot as b on a.url = b.url join Lots as c on b.lotid = c.name and c.name = '"+a['Lot']+"'"
     cur.execute(query)
     res = cur.fetchall()
     print(res)
@@ -32,16 +35,16 @@ def hello_world():
             flag=response.text
             print(flag)
             if 'yes' in flag:
-                a1={"url":i[1],"icon":i[2],"Thumbnail":i[3],"Lot":i[4]}
+                a1={"url":i[1],"icon":i[2],"Thumbnail":i[3]}
                 web.append(a1)
         a2={"result":"returned"}
         print(web)
-        return jsonify(web)
     else:
         for i in res:
-            if i[4]==a['Lot'] or a['Lot']=='':
-                a1={"url":i[1],"icon":i[2],"Thumbnail":i[3],"Lot":i[4]}
-                web.append(a1)
+            #if i[4]==a['Lot'] or a['Lot']=='':
+            a1={"url":i[1],"icon":i[2],"Thumbnail":i[3]}
+            web.append(a1)
+    return jsonify(web)
 @app.route('/generatebookmark',methods=["GET","POST"])
 def fetchurltags():
     a=request.get_json()
@@ -66,7 +69,7 @@ def fetchurltags():
     except:
         id=0
     id+=1
-    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"','"+a["Lot"]+"')" 
+    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
     if True:
@@ -84,6 +87,28 @@ def fetchurltags():
         print(tags)
         for i in tags:
             query = "insert into Tags values("+str(id)+",'"+i+"','"+a["url"]+"')"
+            cur.execute(query)
+            cur.execute("COMMIT")
+            id+=1
+    if True:
+        id=0
+        query = "select max(id) from urllot"
+        cur.execute(query)
+        id = cur.fetchone()
+        print(id)
+        try:
+            id = int(id[0])
+        except:
+            id=0
+        id+=1
+        lots = a["Lot"]
+        
+        print(tags)
+        for i in lots:
+            query = "select id from Lots where name = '"+i+"'"
+            cur.execute(query)
+            lotid = cur.fetchone()
+            query = "insert into urlLot values("+str(id)+",'"+a["url"]+"','"+str(lotid[0])+"')"
             cur.execute(query)
             cur.execute("COMMIT")
             id+=1
@@ -108,3 +133,38 @@ def addtag():
         cur.execute(query)
         cur.execute("COMMIT")
         id+=1
+@app.route('/createlot',methods=['GET','POST'])
+def createLot():
+    a=request.get_json()
+    id=0
+    query = "select max(id) from Lots"
+    cur.execute(query)
+    id = cur.fetchone()
+    print(id)
+    try:
+        id = int(id[0])
+    except:
+        id=0
+    id+=1
+    query = "insert into Lots values("+str(id)+",'"+a["Lot"]+"')"
+    cur.execute(query)
+    cur.execute("COMMIT")
+    a1={'result':'success'}
+    return jsonify(a1)
+
+@app.route('/fetchlots',methods=['GET','POST'])
+def fetchlots():
+    query = "select * from Lots"
+    cur.execute(query)
+    res1 = cur.fetchall()
+    a=[]
+    for i in res1:
+        a.append({'id':i[0],'name':i[1]})
+    return jsonify(a)
+@app.route('/editlot',methods=['GET','POST'])
+def editlot():
+    req = request.get_json()
+    query = "update lots set name = '"+req['name']+"' where id = "+str(req['id'])+""
+    cur.execute(query)
+    cur.execute('COMMIT')
+    return jsonify({'Result':"Success"})
