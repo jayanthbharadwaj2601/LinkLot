@@ -5,7 +5,9 @@ import sqlite3
 import http.client
 import psycopg2
 import json
+from flask_cors import CORS 
 app = Flask(__name__)
+CORS(app)
 conn =psycopg2.connect(
         user='postgres.vkeghbowcwxjvwtqfrta',
         password='QwertyPass#1',
