@@ -71,9 +71,9 @@ def fetchurltags():
     except:
         id=0
     id+=1
-    screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
+    #screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
     #print(screenshot.text)
-    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+screenshot.text+"')" 
+    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
     if True:
