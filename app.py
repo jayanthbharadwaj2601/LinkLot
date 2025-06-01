@@ -71,7 +71,9 @@ def fetchurltags():
     except:
         id=0
     id+=1
-    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
+    screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
+    #print(screenshot.text)
+    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+screenshot.text+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
     if True:
@@ -79,14 +81,14 @@ def fetchurltags():
         query = "select max(id) from tags"
         cur.execute(query)
         id = cur.fetchone()
-        print(id)
+        #print(id)
         try:
             id = int(id[0])
         except:
             id=0
         id+=1
         tags = a["tags"]
-        print(tags)
+        #print(tags)
         for i in tags:
             query = "insert into Tags values("+str(id)+",'"+i+"','"+a["url"]+"')"
             cur.execute(query)
@@ -97,7 +99,7 @@ def fetchurltags():
         query = "select max(id) from urllot"
         cur.execute(query)
         id = cur.fetchone()
-        print(id)
+        #print(id)
         try:
             id = int(id[0])
         except:
@@ -105,14 +107,17 @@ def fetchurltags():
         id+=1
         lots = a["Lot"]
         
-        print(tags)
+        #print(tags)
         for i in lots:
             query = "select id from Lots where name = '"+i+"'"
             cur.execute(query)
             lotid = cur.fetchone()
-            query = "insert into urlLot values("+str(id)+",'"+a["url"]+"','"+str(lotid[0])+"')"
-            cur.execute(query)
-            cur.execute("COMMIT")
+            try:
+                query = "insert into urlLot values("+str(id)+",'"+a["url"]+"','"+str(lotid[0])+"')"
+                cur.execute(query)
+                cur.execute("COMMIT")
+            except:
+                print("No Lot available with given name")
             id+=1
     a2={"result":response.text,"icon":"abc"}
     return jsonify(a2)
