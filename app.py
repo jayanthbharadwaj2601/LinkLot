@@ -19,7 +19,7 @@ cur = conn.cursor()
 @app.route("/getbookmarksviasearch",methods=['GET','POST'])
 def hello_world():
     a=request.get_json()
-    if a['Lot']==[]:
+    if a['Lot']=="":
         query = "select * from bookmarks"
     else:
         query = "select distinct a.* from bookmarks as a join urllot as b on a.url = b.url join Lots as c on b.lotid = c.name and c.name = '"+a['Lot']+"'"
