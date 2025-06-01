@@ -19,10 +19,11 @@ cur = conn.cursor()
 @app.route("/getbookmarksviasearch",methods=['GET','POST'])
 def hello_world():
     a=request.get_json()
+    print(a)
     if a['Lot']=="":
         query = "select * from bookmarks"
     else:
-        query = "select distinct a.* from bookmarks as a join urllot as b on a.url = b.url join Lots as c on b.lotid = c.name and c.name = '"+a['Lot']+"'"
+        query = "select distinct a.* from bookmarks as a join urllot as b on a.url = b.url join Lots as c on b.lotid = c.id and c.name = '"+a['Lot']+"'"
     cur.execute(query)
     res = cur.fetchall()
     print(res)
@@ -46,6 +47,7 @@ def hello_world():
             #if i[4]==a['Lot'] or a['Lot']=='':
             a1={"url":i[1],"icon":i[2],"Thumbnail":i[3]}
             web.append(a1)
+    print('Hello',web)
     return jsonify(web)
 @app.route('/generatebookmark',methods=["GET","POST"])
 def fetchurltags():
@@ -71,9 +73,9 @@ def fetchurltags():
     except:
         id=0
     id+=1
-    #screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
+    screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
     #print(screenshot.text)
-    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
+    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+screenshot.text+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
     if True:
