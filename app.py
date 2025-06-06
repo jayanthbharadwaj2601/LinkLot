@@ -18,7 +18,7 @@ conn =psycopg2.connect(
 cur = conn.cursor()
 @app.route("/getbookmarksviasearch",methods=['GET','POST'])
 def hello_world():
-    a=request.get_json()
+    a=request.args.to_dict() if request.method == 'GET' else request.get_json()
     print(a)
     if a['Lot']=="":
         query = "select * from bookmarks"
