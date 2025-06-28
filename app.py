@@ -155,7 +155,7 @@ def createLot():
     except:
         id=0
     id+=1
-    query = "insert into Lots values("+str(id)+",'"+a["Lot"]+"')"
+    query = "insert into Lots values("+str(id)+",'"+a["Lot"]+"','"+a["Color"]+"')"
     cur.execute(query)
     cur.execute("COMMIT")
     a1={'result':'success'}
@@ -173,7 +173,7 @@ def fetchlots():
 @app.route('/editlot',methods=['GET','POST'])
 def editlot():
     req = request.get_json()
-    query = "update lots set name = '"+req['name']+"' where id = "+str(req['id'])+""
+    query = "update lots set name = '"+req['name']+"' color = '"+req['color']+"' where id = "+str(req['id'])+""
     cur.execute(query)
     cur.execute('COMMIT')
     return jsonify({'Result':"Success"})
