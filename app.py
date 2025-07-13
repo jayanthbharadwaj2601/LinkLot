@@ -15,9 +15,10 @@ conn =psycopg2.connect(
         port='6543',
         dbname='postgres'
     )
-cur = conn.cursor()
+
 @app.route("/getbookmarksviasearch",methods=['GET','POST'])
 def hello_world():
+    cur = conn.cursor()
     a=request.args.to_dict() if request.method == 'GET' else request.get_json()
     print(a)
     if a['Lot']=="":
@@ -51,6 +52,7 @@ def hello_world():
     return jsonify(web)
 @app.route('/generatebookmark',methods=["GET","POST"])
 def fetchurltags():
+    cur = conn.cursor()
     a=request.get_json()
     # conn = http.client.HTTPSConnection("ai-image-generator14.p.rapidapi.com")
     prompt="Provide me with appropriate description for this website.Here is the url:"+a["url"]+"Just provide me with just the description,no need of any other explanation."
@@ -58,8 +60,6 @@ def fetchurltags():
     response = client.models.generate_content(
     model="gemini-1.5-flash", contents=prompt
     )
-    
-    g=requests.get("https://favicone.com/"+a["url"]+"?json")._content
     # h1=jsonify(g)
     # print("Hello",g[2],b'ILO')
 
@@ -75,6 +75,14 @@ def fetchurltags():
     id+=1
     #screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
     #print(screenshot.text)
+    try:
+        print(a["icon"])
+    except:
+        a["icon"]="a"
+    try:
+        print(a["Thumbnail"])
+    except:
+        a["Thumbnail"]="a"
     query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
@@ -107,7 +115,7 @@ def fetchurltags():
         except:
             id=0
         id+=1
-        lots = a["Lot"]
+        lots = a["lot"]
         
         #print(tags)
         for i in lots:
@@ -125,6 +133,7 @@ def fetchurltags():
     return jsonify(a2)
 @app.route('/addtags',methods=["GET","POST"])
 def addtag():
+    cur = conn.cursor()
     id=0
     query = "select max(id) from tags"
     cur.execute(query)
@@ -144,6 +153,7 @@ def addtag():
         id+=1
 @app.route('/createlot',methods=['GET','POST'])
 def createLot():
+    cur = conn.cursor()
     a=request.get_json()
     id=0
     query = "select max(id) from Lots"
@@ -163,6 +173,7 @@ def createLot():
 
 @app.route('/fetchlots',methods=['GET','POST'])
 def fetchlots():
+    cur = conn.cursor()
     query = "select * from Lots"
     cur.execute(query)
     res1 = cur.fetchall()
@@ -172,8 +183,18 @@ def fetchlots():
     return jsonify(a)
 @app.route('/editlot',methods=['GET','POST'])
 def editlot():
+    cur = conn.cursor()
     req = request.get_json()
-    query = "update lots set name = '"+req['name']+"' color = '"+req['color']+"' where id = "+str(req['id'])+""
+    query = "update lots set name = '"+req['name']+"',color = '"+req['color']+"' where id = "+str(req['id'])+""
     cur.execute(query)
     cur.execute('COMMIT')
     return jsonify({'Result':"Success"})
+@app.route('/deletelot',methods=['GET','POST'])
+def deletelot():
+    cur = conn.cursor()
+    req = request.get_json()
+    query = "delete from lots where id="+str(req["id"])
+    cur.execute(query)
+    cur.execute('COMMIT')
+    return jsonify({'Result':"Success"})
+app.run()
