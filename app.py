@@ -6,6 +6,7 @@ import http.client
 import psycopg2
 import json
 from flask_cors import CORS 
+from serpapi import GoogleSearch
 app = Flask(__name__)
 CORS(app)
 conn =psycopg2.connect(
@@ -73,17 +74,42 @@ def fetchurltags():
     except:
         id=0
     id+=1
-    #screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
+    # screenshot = requests.get('https://api.screenshotmachine.com?key=a76adc&url='+a["url"]+'&dimension=1024x768')
+    # e=screenshot.json()
+    params = {
+        "engine": "google_images",
+  "q": a["url"]+" Home page",
+  "api_key": "7d9cb6150c08f7352f7de592a1aa7271785a778875cf28eafa4ca13e29385dac"
+   }
+    search = GoogleSearch(params)
+    results = search.get_json()
+    sourceimage=''
+    for i in results:
+        if sourceimage !='':
+            break
+        for j in results[i]:
+            if sourceimage !='':
+                break
+            for k in j:
+                if k=='original':
+                    sourceimage = j[k]
+                    break
+    e=a["url"].split('/')
+    if len(e)==1:
+        url = e[0]
+    else:
+        url = e[2]
+    icon = requests.get("https://favicone.com/"+url+"?json")
+    f=icon.json()
+    print(icon)
     #print(screenshot.text)
+    print(f)
     try:
-        print(a["icon"])
+        g=f["icon"]
     except:
-        a["icon"]="a"
-    try:
-        print(a["Thumbnail"])
-    except:
-        a["Thumbnail"]="a"
-    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+a["icon"]+"','"+a["Thumbnail"]+"')" 
+        g="a"
+    print(g)
+    query = "insert into bookmarks values("+str(id)+",'"+a["url"]+"','"+g+"','"+sourceimage+"')" 
     cur.execute(query)
     cur.execute("COMMIT")
     if True:
@@ -131,9 +157,57 @@ def fetchurltags():
             id+=1
     a2={"result":response.text,"icon":"abc"}
     return jsonify(a2)
+@app.route('/editbookmark',methods=['GET','POST'])
+def editbookmark():
+    cur = conn.cursor()
+    a=request.get_json()
+    if True:
+        id=0
+        query = "select max(id) from tags"
+        cur.execute(query)
+        id = cur.fetchone()
+        #print(id)
+        try:
+            id = int(id[0])
+        except:
+            id=0
+        id+=1
+        tags = a["tags"]
+        #print(tags)
+        for i in tags:
+            query = "insert into Tags values("+str(id)+",'"+i+"','"+a["url"]+"')"
+            cur.execute(query)
+            cur.execute("COMMIT")
+            id+=1
+    if True:
+        id=0
+        query = "select max(id) from urllot"
+        cur.execute(query)
+        id = cur.fetchone()
+        #print(id)
+        try:
+            id = int(id[0])
+        except:
+            id=0
+        id+=1
+        lots = a["lot"]
+        
+        #print(tags)
+        for i in lots:
+            query = "select id from Lots where name = '"+i+"'"
+            cur.execute(query)
+            lotid = cur.fetchone()
+            try:
+                query = "insert into urlLot values("+str(id)+",'"+a["url"]+"','"+str(lotid[0])+"')"
+                cur.execute(query)
+                cur.execute("COMMIT")
+            except:
+                print("No Lot available with given name")
+            id+=1
 @app.route('/addtags',methods=["GET","POST"])
 def addtag():
     cur = conn.cursor()
+    a=request.get_json()
     id=0
     query = "select max(id) from tags"
     cur.execute(query)
@@ -179,7 +253,7 @@ def fetchlots():
     res1 = cur.fetchall()
     a=[]
     for i in res1:
-        a.append({'id':i[0],'name':i[1]})
+        a.append({'id':i[0],'name':i[1],'color':i[2]})
     return jsonify(a)
 @app.route('/editlot',methods=['GET','POST'])
 def editlot():
